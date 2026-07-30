@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprout, Save &amp; Smile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef3ec;
+    --panel:#ffffff;
+    --ink:#1e2b22;
+    --ink-soft:#5b6b60;
+    --moss:#2f5233;
+    --moss-light:#4b7a52;
+    --coral:#d97b63;
+    --gold:#c99a2e;
+    --line:#dbe4d8;
+    --shadow: 0 2px 10px rgba(30,43,34,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
+  header{text-align:center;margin-bottom:18px;}
+  header h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:34px;
+    margin:6px 0 2px;
+    letter-spacing:-0.5px;
+    color:var(--moss);
+  }
+  header p{margin:0;color:var(--ink-soft);font-size:14px;}
+
+  .tabs{display:flex;gap:6px;background:var(--panel);border-radius:14px;padding:5px;box-shadow:var(--shadow);margin-bottom:18px;}
+  .tab{flex:1;text-align:center;padding:10px 6px;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;color:var(--ink-soft);transition:.15s;user-select:none;}
+  .tab.active{background:var(--moss);color:#fff;}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{background:var(--panel);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .card h2{font-family:'Fraunces',serif;font-size:19px;margin:0 0 4px;color:var(--moss);}
+  .card .sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 14px;}
+
+  .sprout-row{display:flex;align-items:flex-end;justify-content:space-around;gap:8px;padding:10px 0 4px;}
+  .sprout{text-align:center;font-size:11px;color:var(--ink-soft);font-weight:600;}
+  .sprout svg{display:block;margin:0 auto 4px;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  label{font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:4px;}
+  input,select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;
+    font-family:'Inter',sans-serif;font-size:14px;background:#fbfcfa;color:var(--ink);
+  }
+  input:focus,select:focus{outline:2px solid var(--moss-light);outline-offset:1px;}
+
+  button.primary{
+    width:100%;padding:11px;border:none;border-radius:10px;background:var(--moss);color:#fff;
+    font-weight:600;font-size:14px;cursor:pointer;margin-top:4px;
+  }
+  button.primary:active{background:var(--moss-light);}
+  button.ghost{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);padding:7px 10px;
+    border-radius:8px;font-size:12px;cursor:pointer;
+  }
+
+  .log{margin-top:14px;border-top:1px solid var(--line);padding-top:10px;}
+  .log-row{display:flex;justify-content:space-between;gap:8px;padding:8px 2px;border-bottom:1px dashed var(--line);font-size:13.5px;}
+  .log-row:last-child{border-bottom:none;}
+  .log-row .meta{color:var(--ink-soft);font-size:12px;}
+  .amt{font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .amt.in{color:var(--moss);}
+  .amt.out{color:var(--coral);}
+
+  .balance-box{display:flex;justify-content:space-between;align-items:baseline;background:#f3f7f1;border-radius:12px;padding:14px;margin-bottom:14px;}
+  .balance-box .label{font-size:12.5px;color:var(--ink-soft);font-weight:600;}
+  .balance-box .value{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:24px;color:var(--moss);}
+
+  .goal-bar-track{width:100%;height:14px;background:#e7ede4;border-radius:8px;overflow:hidden;margin:10px 0 4px;}
+  .goal-bar-fill{height:100%;background:linear-gradient(90deg,var(--moss-light),var(--gold));border-radius:8px;transition:width .4s ease;}
+  .goal-pct{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--moss);font-size:13px;}
+
+  .empty{color:var(--ink-soft);font-size:13px;text-align:center;padding:14px 0;}
+  .footer-note{text-align:center;font-size:11.5px;color:var(--ink-soft);margin-top:10px;}
+  .status-msg{font-size:12px;text-align:center;color:var(--ink-soft);padding:8px 0;}
+
+  .mood-picker{display:flex;gap:6px;justify-content:space-between;margin-bottom:4px;}
+  .mood-opt{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:#fbfcfa;border:1px solid var(--line);border-radius:10px;
+    padding:8px 4px;font-size:22px;cursor:pointer;
+  }
+  .mood-opt span{font-size:10px;font-weight:600;color:var(--ink-soft);}
+  .mood-opt.selected{background:#eaf3e7;border-color:var(--moss);}
+  .mood-emoji{font-size:18px;}
+
+  .checklist-row{
+    display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px dashed var(--line);
+  }
+  .checklist-row:last-child{border-bottom:none;}
+  .checklist-row input[type="checkbox"]{
+    width:20px;height:20px;accent-color:var(--moss);flex-shrink:0;
+  }
+  .checklist-row .item-text{flex:1;font-size:14.5px;}
+  .checklist-row .item-text.done{text-decoration:line-through;color:var(--ink-soft);}
+  .checklist-row button.ghost{padding:5px 8px;font-size:11px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Sprout, Save &amp; Smile</h1>
+    <p>Food, water &amp; pocket money — shared between mother and daughter</p>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="food">🌱 Food &amp; Water</div>
+    <div class="tab" data-tab="money">💰 Pocket Money</div>
+    <div class="tab" data-tab="goal">🎯 Savings Goal</div>
+    <div class="tab" data-tab="checklist">✅ Checklist</div>
+    <div class="tab" data-tab="mood">😊 Mood</div>
+    <div class="tab" data-tab="report">📄 Report</div>
+  </div>
+
+  <!-- FOOD PANEL -->
+  <div class="panel active" id="panel-food">
+    <div class="card">
+      <h2>Today's Balance</h2>
+      <p class="sub">Every leaf that sprouts means today's target was met.</p>
+      <div class="sprout-row" id="sproutRow"></div>
+    </div>
+
+    <div class="card">
+      <h2 id="foodFormTitle">Log today</h2>
+      <label>Date</label>
+      <input type="date" id="fDate">
+      <div class="field-grid" style="margin-top:10px;">
+        <div><label>Water (cups)</label><input type="number" id="fWater" min="0" placeholder="e.g. 6"></div>
+        <div><label>Protein (g)</label><input type="number" id="fProtein" min="0" placeholder="e.g. 30"></div>
+        <div><label>Fiber (g)</label><input type="number" id="fFiber" min="0" placeholder="e.g. 20"></div>
+        <div><label>Carbs (g)</label><input type="number" id="fCarbs" min="0" placeholder="e.g. 140"></div>
+      </div>
+      <label>Notes (what she ate)</label>
+      <input type="text" id="fNotes" placeholder="e.g. oats, dal-rice, fruit">
+      <button class="primary" id="fSubmitBtn" onclick="addFoodEntry()">Save log</button>
+      <button class="ghost" id="fCancelBtn" onclick="cancelFoodEdit()" style="display:none;margin-top:8px;width:100%;">Cancel edit</button>
+      <div class="log" id="foodLog"></div>
+    </div>
+  </div>
+
+  <!-- MONEY PANEL -->
+  <div class="panel" id="panel-money">
+    <div class="card">
+      <div class="balance-box">
+        <div><div class="label">Current balance</div></div>
+        <div class="value" id="moneyBalance">Rs. 0</div>
+      </div>
+      <h2 id="moneyFormTitle">Add a transaction</h2>
+      <label>Date</label>
+      <input type="date" id="mDate">
+      <div class="field-grid" style="margin-top:10px;">
+        <div><label>Type</label>
+          <select id="mType"><option value="In">Money In</option><option value="Out">Money Out</option></select>
+        </div>
+        <div><label>Amount (Rs.)</label><input type="number" id="mAmount" min="0" placeholder="e.g. 200"></div>
+      </div>
+      <label>What for?</label>
+      <input type="text" id="mDesc" placeholder="e.g. weekly allowance, notebook">
+      <button class="primary" id="mSubmitBtn" onclick="addMoneyEntry()">Add transaction</button>
+      <button class="ghost" id="mCancelBtn" onclick="cancelMoneyEdit()" style="display:none;margin-top:8px;width:100%;">Cancel edit</button>
+      <div class="log" id="moneyLog"></div>
+    </div>
+  </div>
+
+  <!-- GOAL PANEL -->
+  <div class="panel" id="panel-goal">
+    <div class="card">
+      <h2>Savings goal</h2>
+      <div class="field-grid">
+        <div><label>Goal name</label><input type="text" id="gName" placeholder="e.g. New bicycle"></div>
+        <div><label>Target (Rs.)</label><input type="number" id="gTarget" min="0" placeholder="e.g. 5000"></div>
+      </div>
+      <button class="primary" onclick="saveGoal()">Save goal</button>
+    </div>
+    <div class="card">
+      <h2 id="goalTitle">Progress</h2>
+      <p class="sub" id="goalSub">Saved amount comes straight from the pocket money balance.</p>
+      <div class="goal-bar-track"><div class="goal-bar-fill" id="goalBarFill" style="width:0%"></div></div>
+      <div class="goal-pct" id="goalPct">0% there</div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST PANEL -->
+  <div class="panel" id="panel-checklist">
+    <div class="card">
+      <h2>Today's checklist</h2>
+      <p class="sub" id="checklistDateLabel"></p>
+      <div id="checklistItems"></div>
+    </div>
+    <div class="card">
+      <h2>Add an item</h2>
+      <label>New checklist item</label>
+      <input type="text" id="newChecklistItem" placeholder="e.g. Pack water bottle">
+      <button class="primary" onclick="addChecklistItem()">Add item</button>
+    </div>
+  </div>
+
+  <!-- MOOD PANEL -->
+  <div class="panel" id="panel-mood">
+    <div class="card">
+      <h2 id="moodFormTitle">How's today going?</h2>
+      <label>Date</label>
+      <input type="date" id="moodDate">
+      <label style="margin-top:10px;">Mood</label>
+      <div class="mood-picker" id="moodPicker">
+        <button type="button" class="mood-opt" data-mood="1" onclick="selectMood(1)">😢<span>Rough</span></button>
+        <button type="button" class="mood-opt" data-mood="2" onclick="selectMood(2)">😕<span>Meh</span></button>
+        <button type="button" class="mood-opt" data-mood="3" onclick="selectMood(3)">😐<span>Okay</span></button>
+        <button type="button" class="mood-opt" data-mood="4" onclick="selectMood(4)">🙂<span>Good</span></button>
+        <button type="button" class="mood-opt" data-mood="5" onclick="selectMood(5)">😄<span>Great</span></button>
+      </div>
+      <label>Notes (what happened?)</label>
+      <input type="text" id="moodNotes" placeholder="e.g. exam went well, tired today">
+      <button class="primary" id="moodSubmitBtn" onclick="addMoodEntry()">Save mood</button>
+      <button class="ghost" id="moodCancelBtn" onclick="cancelMoodEdit()" style="display:none;margin-top:8px;width:100%;">Cancel edit</button>
+      <div class="log" id="moodLog"></div>
+    </div>
+  </div>
+
+  <!-- REPORT PANEL -->
+  <div class="panel" id="panel-report">
+    <div class="card">
+      <h2 id="reportTitle">This month's summary</h2>
+      <p class="sub" id="reportSub"></p>
+      <div class="log" id="reportSummary"></div>
+      <button class="primary" onclick="downloadMonthlyReport()" style="margin-top:14px;">⬇ Download this month's report (CSV)</button>
+      <p class="footer-note" style="margin-top:10px;">Opens as a file — open it in Excel, Google Sheets, or Numbers.</p>
+    </div>
+  </div>
+
+  <p class="footer-note">Data here is shared — visible to anyone who opens this page. Open it on both phones to stay in sync.</p>
+</div>
+
+<script>
+const TARGETS = { water: 8, protein: 34, fiber: 26, carbs: 130 };
+let foodLog = [];
+let moneyLog = [];
+let moodLog = [];
+let goal = { name: "", target: 0 };
+let checklistItems = [];       // array of strings
+let checklistCompletions = {}; // { "YYYY-MM-DD": { "item text": true } }
+
+const DEFAULT_CHECKLIST_ITEMS = [
+  "Get signature from diary",
+  "Arrange school bag",
+  "Arrange lunch box"
+];
+
+const MOOD_LABELS = { 1: 'Rough', 2: 'Meh', 3: 'Okay', 4: 'Good', 5: 'Great' };
+const MOOD_EMOJI = { 1: '😢', 2: '😕', 3: '😐', 4: '🙂', 5: '😄' };
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Storage helpers ----------
+async function loadAll() {
+  try {
+    const f = await window.storage.get('food-log', true);
+    foodLog = f ? JSON.parse(f.value) : [];
+  } catch (e) { foodLog = []; }
+  try {
+    const m = await window.storage.get('money-log', true);
+    moneyLog = m ? JSON.parse(m.value) : [];
+  } catch (e) { moneyLog = []; }
+  try {
+    const md = await window.storage.get('mood-log', true);
+    moodLog = md ? JSON.parse(md.value) : [];
+  } catch (e) { moodLog = []; }
+  try {
+    const g = await window.storage.get('goal-settings', true);
+    goal = g ? JSON.parse(g.value) : { name: "", target: 0 };
+  } catch (e) { goal = { name: "", target: 0 }; }
+  try {
+    const ci = await window.storage.get('checklist-items', true);
+    checklistItems = ci ? JSON.parse(ci.value) : [...DEFAULT_CHECKLIST_ITEMS];
+  } catch (e) { checklistItems = [...DEFAULT_CHECKLIST_ITEMS]; }
+  try {
+    const cc = await window.storage.get('checklist-completions', true);
+    checklistCompletions = cc ? JSON.parse(cc.value) : {};
+  } catch (e) { checklistCompletions = {}; }
+  renderAll();
+}
+
+async function saveFoodLog() {
+  try { await window.storage.set('food-log', JSON.stringify(foodLog), true); }
+  catch (e) { console.error('Storage error (food-log):', e); }
+}
+async function saveMoneyLog() {
+  try { await window.storage.set('money-log', JSON.stringify(moneyLog), true); }
+  catch (e) { console.error('Storage error (money-log):', e); }
+}
+async function saveMoodLog() {
+  try { await window.storage.set('mood-log', JSON.stringify(moodLog), true); }
+  catch (e) { console.error('Storage error (mood-log):', e); }
+}
+async function saveGoalSettings() {
+  try { await window.storage.set('goal-settings', JSON.stringify(goal), true); }
+  catch (e) { console.error('Storage error (goal-settings):', e); }
+}
+async function saveChecklistItems() {
+  try { await window.storage.set('checklist-items', JSON.stringify(checklistItems), true); }
+  catch (e) { console.error('Storage error (checklist-items):', e); }
+}
+async function saveChecklistCompletions() {
+  try { await window.storage.set('checklist-completions', JSON.stringify(checklistCompletions), true); }
+  catch (e) { console.error('Storage error (checklist-completions):', e); }
+}
+
+// ---------- Food ----------
+let foodEditIndex = null;
+
+function todaysFoodEntry() {
+  const today = new Date().toISOString().slice(0, 10);
+  return foodLog.find(e => e.date === today);
+}
+
+async function addFoodEntry() {
+  const date = document.getElementById('fDate').value || new Date().toISOString().slice(0, 10);
+  const water = parseFloat(document.getElementById('fWater').value) || 0;
+  const protein = parseFloat(document.getElementById('fProtein').value) || 0;
+  const fiber = parseFloat(document.getElementById('fFiber').value) || 0;
+  const carbs = parseFloat(document.getElementById('fCarbs').value) || 0;
+  const notes = document.getElementById('fNotes').value.trim();
+  const entry = { date, water, protein, fiber, carbs, notes };
+
+  if (foodEditIndex !== null) {
+    foodLog[foodEditIndex] = entry;
+  } else {
+    const existing = foodLog.find(e => e.date === date);
+    if (existing) Object.assign(existing, entry);
+    else foodLog.unshift(entry);
+  }
+
+  await saveFoodLog();
+  cancelFoodEdit();
+  renderFood();
+}
+
+function editFoodEntry(index) {
+  const e = foodLog[index];
+  if (!e) return;
+  foodEditIndex = index;
+  document.getElementById('fDate').value = e.date;
+  document.getElementById('fWater').value = e.water;
+  document.getElementById('fProtein').value = e.protein;
+  document.getElementById('fFiber').value = e.fiber;
+  document.getElementById('fCarbs').value = e.carbs;
+  document.getElementById('fNotes').value = e.notes || '';
+  document.getElementById('fSubmitBtn').textContent = 'Update log';
+  document.getElementById('fCancelBtn').style.display = 'block';
+  document.getElementById('foodFormTitle').textContent = 'Editing entry';
+  document.getElementById('fDate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelFoodEdit() {
+  foodEditIndex = null;
+  ['fDate','fWater','fProtein','fFiber','fCarbs','fNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fSubmitBtn').textContent = 'Save log';
+  document.getElementById('fCancelBtn').style.display = 'none';
+  document.getElementById('foodFormTitle').textContent = 'Log today';
+}
+
+async function deleteFoodEntry(index) {
+  if (!confirm('Delete this food log entry?')) return;
+  foodLog.splice(index, 1);
+  await saveFoodLog();
+  if (foodEditIndex === index) cancelFoodEdit();
+  renderFood();
+}
+
+function renderSprouts() {
+  const today = todaysFoodEntry() || { water:0, protein:0, fiber:0, carbs:0 };
+  const nutrients = [
+    { key:'water', label:'Water', val: today.water, target: TARGETS.water },
+    { key:'protein', label:'Protein', val: today.protein, target: TARGETS.protein },
+    { key:'fiber', label:'Fiber', val: today.fiber, target: TARGETS.fiber },
+    { key:'carbs', label:'Carbs', val: today.carbs, target: TARGETS.carbs },
+  ];
+  const row = document.getElementById('sproutRow');
+  row.innerHTML = nutrients.map(n => {
+    const met = n.val >= n.target;
+    const color = met ? 'var(--moss)' : '#c7d3c3';
+    return `
+      <div class="sprout">
+        <svg width="30" height="46" viewBox="0 0 30 46">
+          <line x1="15" y1="46" x2="15" y2="${met ? 14 : 30}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+          ${met ? `<ellipse cx="7" cy="14" rx="8" ry="5" fill="${color}" transform="rotate(-25 7 14)"/>
+                    <ellipse cx="23" cy="14" rx="8" ry="5" fill="${color}" transform="rotate(25 23 14)"/>` :
+                   `<circle cx="15" cy="30" r="3" fill="${color}"/>`}
+        </svg>
+        ${n.label}
+      </div>`;
+  }).join('');
+}
+
+function renderFood() {
+  renderSprouts();
+  const log = document.getElementById('foodLog');
+  if (foodLog.length === 0) {
+    log.innerHTML = '<div class="empty">No entries yet — log today\'s food above.</div>';
+    return;
+  }
+  log.innerHTML = foodLog.slice(0, 14).map((e, i) => `
+    <div class="log-row">
+      <div>
+        <div>${e.date}</div>
+        <div class="meta">${e.notes ? e.notes : 'No notes'}</div>
+      </div>
+      <div class="meta" style="text-align:right;">
+        💧${e.water}c &nbsp; 🥚${e.protein}g<br>🌾${e.fiber}g &nbsp; 🍚${e.carbs}g
+        <div style="margin-top:6px;">
+          <button class="ghost" onclick="editFoodEntry(${i})">✎ Edit</button>
+          <button class="ghost" onclick="deleteFoodEntry(${i})">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ---------- Money ----------
+let moneyEditIndex = null;
+
+async function addMoneyEntry() {
+  const date = document.getElementById('mDate').value || new Date().toISOString().slice(0, 10);
+  const type = document.getElementById('mType').value;
+  const amount = parseFloat(document.getElementById('mAmount').value) || 0;
+  const desc = document.getElementById('mDesc').value.trim() || (type === 'In' ? 'Money in' : 'Money out');
+  if (amount <= 0) return;
+  const entry = { date, desc, type, amount };
+
+  if (moneyEditIndex !== null) moneyLog[moneyEditIndex] = entry;
+  else moneyLog.unshift(entry);
+
+  await saveMoneyLog();
+  cancelMoneyEdit();
+  renderMoney();
+  renderGoal();
+  renderReport();
+}
+
+function editMoneyEntry(index) {
+  const e = moneyLog[index];
+  if (!e) return;
+  moneyEditIndex = index;
+  document.getElementById('mDate').value = e.date;
+  document.getElementById('mType').value = e.type;
+  document.getElementById('mAmount').value = e.amount;
+  document.getElementById('mDesc').value = e.desc;
+  document.getElementById('mSubmitBtn').textContent = 'Update transaction';
+  document.getElementById('mCancelBtn').style.display = 'block';
+  document.getElementById('moneyFormTitle').textContent = 'Editing transaction';
+  document.getElementById('mDate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelMoneyEdit() {
+  moneyEditIndex = null;
+  document.getElementById('mDate').value = '';
+  document.getElementById('mAmount').value = '';
+  document.getElementById('mDesc').value = '';
+  document.getElementById('mType').value = 'In';
+  document.getElementById('mSubmitBtn').textContent = 'Add transaction';
+  document.getElementById('mCancelBtn').style.display = 'none';
+  document.getElementById('moneyFormTitle').textContent = 'Add a transaction';
+}
+
+async function deleteMoneyEntry(index) {
+  if (!confirm('Delete this transaction?')) return;
+  moneyLog.splice(index, 1);
+  await saveMoneyLog();
+  if (moneyEditIndex === index) cancelMoneyEdit();
+  renderMoney();
+  renderGoal();
+  renderReport();
+}
+
+function currentBalance() {
+  return moneyLog.reduce((sum, e) => sum + (e.type === 'In' ? e.amount : -e.amount), 0);
+}
+
+function renderMoney() {
+  document.getElementById('moneyBalance').textContent = 'Rs. ' + currentBalance().toLocaleString('en-IN');
+  const log = document.getElementById('moneyLog');
+  if (moneyLog.length === 0) {
+    log.innerHTML = '<div class="empty">No transactions yet — add one above.</div>';
+    return;
+  }
+  log.innerHTML = moneyLog.slice(0, 20).map((e, i) => `
+    <div class="log-row">
+      <div>
+        <div>${e.desc}</div>
+        <div class="meta">${e.date}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="amt ${e.type === 'In' ? 'in' : 'out'}">${e.type === 'In' ? '+' : '-'}Rs. ${e.amount.toLocaleString('en-IN')}</div>
+        <div style="margin-top:6px;">
+          <button class="ghost" onclick="editMoneyEntry(${i})">✎ Edit</button>
+          <button class="ghost" onclick="deleteMoneyEntry(${i})">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ---------- Goal ----------
+async function saveGoal() {
+  const name = document.getElementById('gName').value.trim();
+  const target = parseFloat(document.getElementById('gTarget').value) || 0;
+  goal = { name: name || goal.name, target: target || goal.target };
+  await saveGoalSettings();
+  renderGoal();
+}
+
+function renderGoal() {
+  const nameInput = document.getElementById('gName');
+  const targetInput = document.getElementById('gTarget');
+  if (document.activeElement !== nameInput) nameInput.value = goal.name || '';
+  if (document.activeElement !== targetInput) targetInput.value = goal.target || '';
+  const saved = currentBalance();
+  const target = goal.target || 0;
+  const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
+  document.getElementById('goalTitle').textContent = goal.name ? goal.name : 'Progress';
+  document.getElementById('goalSub').textContent = target > 0
+    ? `Rs. ${saved.toLocaleString('en-IN')} saved of Rs. ${target.toLocaleString('en-IN')}`
+    : 'Set a target above to start tracking progress.';
+  document.getElementById('goalBarFill').style.width = pct + '%';
+  document.getElementById('goalPct').textContent = pct + '% there';
+}
+
+// ---------- Mood ----------
+let moodEditIndex = null;
+let selectedMood = null;
+
+function selectMood(val) {
+  selectedMood = val;
+  document.querySelectorAll('.mood-opt').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.mood) === val);
+  });
+}
+
+async function addMoodEntry() {
+  const date = document.getElementById('moodDate').value || new Date().toISOString().slice(0, 10);
+  const notes = document.getElementById('moodNotes').value.trim();
+  if (!selectedMood) { alert('Pick a mood first!'); return; }
+  const entry = { date, mood: selectedMood, notes };
+
+  if (moodEditIndex !== null) {
+    moodLog[moodEditIndex] = entry;
+  } else {
+    const existing = moodLog.find(e => e.date === date);
+    if (existing) Object.assign(existing, entry);
+    else moodLog.unshift(entry);
+  }
+
+  await saveMoodLog();
+  cancelMoodEdit();
+  renderMood();
+  renderReport();
+}
+
+function editMoodEntry(index) {
+  const e = moodLog[index];
+  if (!e) return;
+  moodEditIndex = index;
+  document.getElementById('moodDate').value = e.date;
+  document.getElementById('moodNotes').value = e.notes || '';
+  selectMood(e.mood);
+  document.getElementById('moodSubmitBtn').textContent = 'Update mood';
+  document.getElementById('moodCancelBtn').style.display = 'block';
+  document.getElementById('moodFormTitle').textContent = 'Editing mood entry';
+  document.getElementById('moodDate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelMoodEdit() {
+  moodEditIndex = null;
+  selectedMood = null;
+  document.getElementById('moodDate').value = '';
+  document.getElementById('moodNotes').value = '';
+  document.querySelectorAll('.mood-opt').forEach(btn => btn.classList.remove('selected'));
+  document.getElementById('moodSubmitBtn').textContent = 'Save mood';
+  document.getElementById('moodCancelBtn').style.display = 'none';
+  document.getElementById('moodFormTitle').textContent = "How's today going?";
+}
+
+async function deleteMoodEntry(index) {
+  if (!confirm('Delete this mood entry?')) return;
+  moodLog.splice(index, 1);
+  await saveMoodLog();
+  if (moodEditIndex === index) cancelMoodEdit();
+  renderMood();
+  renderReport();
+}
+
+function renderMood() {
+  const log = document.getElementById('moodLog');
+  if (moodLog.length === 0) {
+    log.innerHTML = '<div class="empty">No mood entries yet — log today\'s above.</div>';
+    return;
+  }
+  log.innerHTML = moodLog.slice(0, 20).map((e, i) => `
+    <div class="log-row">
+      <div>
+        <div>${MOOD_EMOJI[e.mood]} ${MOOD_LABELS[e.mood]}</div>
+        <div class="meta">${e.date}${e.notes ? ' · ' + e.notes : ''}</div>
+      </div>
+      <div style="text-align:right;">
+        <button class="ghost" onclick="editMoodEntry(${i})">✎ Edit</button>
+        <button class="ghost" onclick="deleteMoodEntry(${i})">🗑 Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+// ---------- Checklist ----------
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function toggleChecklistItem(item, checked) {
+  const day = todayKey();
+  if (!checklistCompletions[day]) checklistCompletions[day] = {};
+  checklistCompletions[day][item] = checked;
+  await saveChecklistCompletions();
+  renderChecklist();
+}
+
+async function addChecklistItem() {
+  const input = document.getElementById('newChecklistItem');
+  const text = input.value.trim();
+  if (!text) return;
+  if (checklistItems.includes(text)) { input.value = ''; return; }
+  checklistItems.push(text);
+  await saveChecklistItems();
+  input.value = '';
+  renderChecklist();
+}
+
+async function removeChecklistItem(item) {
+  if (!confirm(`Remove "${item}" from the checklist?`)) return;
+  checklistItems = checklistItems.filter(i => i !== item);
+  await saveChecklistItems();
+  renderChecklist();
+}
+
+function renderChecklist() {
+  const day = todayKey();
+  document.getElementById('checklistDateLabel').textContent =
+    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const todaysCompletions = checklistCompletions[day] || {};
+  const container = document.getElementById('checklistItems');
+  if (checklistItems.length === 0) {
+    container.innerHTML = '<div class="empty">No checklist items yet — add one below.</div>';
+    return;
+  }
+  container.innerHTML = checklistItems.map(item => {
+    const done = !!todaysCompletions[item];
+    const safeId = 'chk_' + btoa(unescape(encodeURIComponent(item))).replace(/[^a-zA-Z0-9]/g, '');
+    return `
+      <div class="checklist-row">
+        <input type="checkbox" id="${safeId}" ${done ? 'checked' : ''}
+          onchange='toggleChecklistItem(${JSON.stringify(item)}, this.checked)'>
+        <label class="item-text ${done ? 'done' : ''}" for="${safeId}">${item}</label>
+        <button class="ghost" onclick='removeChecklistItem(${JSON.stringify(item)})'>🗑</button>
+      </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderFood();
+  renderMoney();
+  renderGoal();
+  renderMood();
+  renderChecklist();
+  renderReport();
+}
+
+// ---------- Monthly Report ----------
+function currentMonthKey() {
+  const d = new Date();
+  return d.toISOString().slice(0, 7); // "2026-07"
+}
+function monthLabel() {
+  return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+function thisMonthFood() {
+  const mk = currentMonthKey();
+  return foodLog.filter(e => e.date.startsWith(mk));
+}
+function thisMonthMoney() {
+  const mk = currentMonthKey();
+  return moneyLog.filter(e => e.date.startsWith(mk));
+}
+function thisMonthMood() {
+  const mk = currentMonthKey();
+  return moodLog.filter(e => e.date.startsWith(mk));
+}
+
+function renderReport() {
+  document.getElementById('reportTitle').textContent = monthLabel() + ' summary';
+  const foodThis = thisMonthFood();
+  const moneyThis = thisMonthMoney();
+  const moodThis = thisMonthMood();
+
+  const daysMetAll = foodThis.filter(e =>
+    e.water >= TARGETS.water && e.protein >= TARGETS.protein &&
+    e.fiber >= TARGETS.fiber && e.carbs >= TARGETS.carbs).length;
+
+  const totalIn = moneyThis.filter(e => e.type === 'In').reduce((s, e) => s + e.amount, 0);
+  const totalOut = moneyThis.filter(e => e.type === 'Out').reduce((s, e) => s + e.amount, 0);
+  const net = totalIn - totalOut;
+
+  const avgMood = moodThis.length
+    ? (moodThis.reduce((s, e) => s + e.mood, 0) / moodThis.length)
+    : null;
+  const moodLine = avgMood !== null
+    ? `${avgMood.toFixed(1)} / 5 ${MOOD_EMOJI[Math.round(avgMood)]}`
+    : '— no entries yet';
+
+  document.getElementById('reportSub').textContent =
+    `${foodThis.length} food logs, ${moneyThis.length} transactions, ${moodThis.length} mood check-ins this month`;
+
+  document.getElementById('reportSummary').innerHTML = `
+    <div class="log-row"><div>Days all 4 nutrition targets met</div><div class="amt in">${daysMetAll} / ${foodThis.length}</div></div>
+    <div class="log-row"><div>Average mood this month</div><div class="amt in">${moodLine}</div></div>
+    <div class="log-row"><div>Total money in</div><div class="amt in">+Rs. ${totalIn.toLocaleString('en-IN')}</div></div>
+    <div class="log-row"><div>Total money out</div><div class="amt out">-Rs. ${totalOut.toLocaleString('en-IN')}</div></div>
+    <div class="log-row"><div>Net saved this month</div><div class="amt ${net >= 0 ? 'in' : 'out'}">Rs. ${net.toLocaleString('en-IN')}</div></div>
+    <div class="log-row"><div>Current overall balance</div><div class="amt in">Rs. ${currentBalance().toLocaleString('en-IN')}</div></div>
+  `;
+}
+
+function csvEscape(val) {
+  const s = String(val ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function downloadMonthlyReport() {
+  const foodThis = thisMonthFood();
+  const moneyThis = thisMonthMoney();
+  const moodThis = thisMonthMood();
+  const lines = [];
+
+  lines.push(`Sprout, Save & Smile - ${monthLabel()} Report`);
+  lines.push('');
+  lines.push('FOOD & WATER LOG');
+  lines.push(['Date','Water (cups)','Protein (g)','Fiber (g)','Carbs (g)','Notes'].map(csvEscape).join(','));
+  foodThis.forEach(e => {
+    lines.push([e.date, e.water, e.protein, e.fiber, e.carbs, e.notes || ''].map(csvEscape).join(','));
+  });
+  lines.push('');
+  lines.push('MOOD LOG');
+  lines.push(['Date','Mood (1-5)','Mood Label','Notes'].map(csvEscape).join(','));
+  moodThis.forEach(e => {
+    lines.push([e.date, e.mood, MOOD_LABELS[e.mood], e.notes || ''].map(csvEscape).join(','));
+  });
+  lines.push('');
+  lines.push('POCKET MONEY LOG');
+  lines.push(['Date','Description','Type','Amount (Rs.)'].map(csvEscape).join(','));
+  moneyThis.forEach(e => {
+    lines.push([e.date, e.desc, e.type, e.amount].map(csvEscape).join(','));
+  });
+  lines.push('');
+  const totalIn = moneyThis.filter(e => e.type === 'In').reduce((s, e) => s + e.amount, 0);
+  const totalOut = moneyThis.filter(e => e.type === 'Out').reduce((s, e) => s + e.amount, 0);
+  const avgMood = moodThis.length ? (moodThis.reduce((s, e) => s + e.mood, 0) / moodThis.length) : '';
+  lines.push('SUMMARY');
+  lines.push(`Total Money In,Rs. ${totalIn}`);
+  lines.push(`Total Money Out,Rs. ${totalOut}`);
+  lines.push(`Net Saved This Month,Rs. ${totalIn - totalOut}`);
+  lines.push(`Current Overall Balance,Rs. ${currentBalance()}`);
+  lines.push(`Average Mood,${avgMood ? avgMood.toFixed(1) + ' / 5' : 'No entries'}`);
+
+  const csvContent = lines.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Sprout-Save-Smile-Report-${currentMonthKey()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Init ----------
+(function setDefaultDates() {
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('fDate').value = today;
+  document.getElementById('mDate').value = today;
+  document.getElementById('moodDate').value = today;
+})();
+
+loadAll();
+
+// ---------- Auto-refresh: pick up updates made from the other phone ----------
+let autoRefreshTimer = null;
+function startAutoRefresh() {
+  if (autoRefreshTimer) return;
+  autoRefreshTimer = setInterval(() => {
+    // Skip a refresh cycle while someone is actively typing in a text field,
+    // so it doesn't wipe out what they're entering.
+    const el = document.activeElement;
+    const isTyping = el && (el.tagName === 'INPUT' || el.tagName === 'SELECT') && el.value !== '';
+    if (!isTyping) loadAll();
+  }, 20000); // every 20 seconds
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') loadAll();
+});
+startAutoRefresh();
+</script>
+</body>
+</html>
